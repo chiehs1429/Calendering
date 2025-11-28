@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CL_CT Inventory System</title>
+    
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
 
@@ -16,7 +17,7 @@
         
         h2 { text-align: center; margin-bottom: 10px; font-size: 2.3rem; color: #eee; font-weight: bold; letter-spacing: 1px; }
 
-        /* === 🔐 新增：登入鎖定畫面樣式 === */
+        /* === 🔐 登入鎖定畫面樣式 === */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #111; z-index: 9999; /* 確保蓋過所有內容 */
@@ -43,7 +44,7 @@
 
         /* 人員代號輸入區 */
         .user-bar {
-            display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 10px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px;
             background: #2c3e50; padding: 10px 15px; border-radius: 8px; border: 2px solid #007bff; width: 100%;
             box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
         }
@@ -51,6 +52,11 @@
         .input-field {
             flex: 1; min-width: 100px; padding: 8px; border: 1px solid #555; border-radius: 4px;
             background: #fff; color: #000; font-size: 1.1rem; letter-spacing: 1px; font-weight: bold;
+        }
+        /* 新增：鎖定按鈕樣式 */
+        .btn-lock {
+            padding: 8px 12px; background: #dc3545; border: none; border-radius: 4px; color: white;
+            font-weight: bold; cursor: pointer; font-size: 0.9rem;
         }
         
         /* 模式切換按鈕 */
@@ -219,6 +225,7 @@
     <div class="user-bar">
         <label>👤 人員代號 (User):</label>
         <input type="text" id="userInput" class="input-field" placeholder="請先輸入代號" onchange="changeUser(this.value)">
+        <button class="btn-lock" onclick="logoutSystem()" title="登出/鎖定 (Logout)">🔒</button>
     </div>
 
     <div class="mode-switch">
@@ -325,8 +332,8 @@
         // 🔧 系統核心參數
         // ==========================================
         const SYSTEM_CONFIG = {
-            API_URL: "https://script.google.com/macros/s/AKfycbxIVUaAXpAWdEvnKiARhOFExB57PXgBANt9iEG6AdwcGT3H_PE1A8fTN8JgH-Dr1nXS4Q/exec",
-            SHEET_URL: "https://docs.google.com/spreadsheets/d/1T4tveDcNoiYCjDr6BABeKPfRBlWPUGl_8PRpPrwuiE8/edit?gid=0#gid=0"
+            API_URL: "https://script.google.com/macros/s/AKfycbwUQxxAoN3Wk_Gtm4ETH-Vwxb40AHo3i9otrsNV-99Bi6V7GfFztSnJX9pNlNGWuq72/exec",
+            SHEET_URL: "https://docs.google.com/spreadsheets/d/1ZjSEp4d_j2zZoCV_xQoMSl7HSA9VcPV7pbE2lXXxUW8/edit?gid=0#gid=0"
         };
         
         // 🔐 系統密碼 (請在此修改)
@@ -334,7 +341,13 @@
 
         // ==========================================
 
-        // === 🔐 登入邏輯 ===
+        // === 🔐 登入/記憶 邏輯 ===
+        
+        // 1. 頁面載入時檢查是否已登入
+        if (localStorage.getItem('isSystemLogged') === 'true') {
+            document.getElementById('login-overlay').style.display = 'none';
+        }
+
         function checkLogin() {
             const input = document.getElementById('loginPass').value;
             const msg = document.getElementById('loginMsg');
@@ -342,12 +355,21 @@
             if (input === SYSTEM_PASSWORD) {
                 // 密碼正確
                 document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('loginMsg').innerText = "";
                 
-                // 解鎖後，如果需要自動啟動相機，可以放在這裡
-                // switchMode(currentMode); 
+                // 儲存登入狀態
+                localStorage.setItem('isSystemLogged', 'true');
             } else {
                 // 密碼錯誤
                 msg.innerText = "❌ 密碼錯誤 (Wrong Password)";
+                document.getElementById('loginPass').value = "";
+            }
+        }
+
+        function logoutSystem() {
+            if(confirm("確定要鎖定/登出嗎? Lock System?")) {
+                localStorage.removeItem('isSystemLogged');
+                document.getElementById('login-overlay').style.display = 'flex';
                 document.getElementById('loginPass').value = "";
             }
         }
